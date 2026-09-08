@@ -1,0 +1,161 @@
+{
+  "aggregate": {
+    "faithfulness": 0.8938,
+    "answer_relevancy": 0.7838,
+    "context_precision": 0.975,
+    "context_recall": 0.95
+  },
+  "num_questions": 20,
+  "failures": [
+    {
+      "question": "Một nhân viên Senior có 9 năm thâm niên được nghỉ bao nhiêu ngày phép năm và lương trong khoảng nào?",
+      "answer": "Nhân viên Senior có 9 năm thâm niên sẽ được nghỉ 18 ngày phép năm (15 ngày chính + 3 ngày thêm cho 9 năm thâm niên). Về lương, không có thông tin cụ thể trong context để xác định lương của nhân viên. Không tìm thấy.",
+      "avg_score": 0.5625,
+      "worst_metric": "answer_relevancy",
+      "score": 0.0,
+      "metrics": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.0,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      },
+      "diagnosis": "Câu trả lời lạc đề so với câu hỏi",
+      "suggested_fix": "Cải thiện prompt template, thêm few-shot"
+    },
+    {
+      "question": "Nhân viên tạm ứng 15 triệu, sau 20 ngày mới thanh toán. Bị phạt bao nhiêu?",
+      "answer": "Nhân viên tạm ứng 15 triệu VNĐ và đã thanh toán sau 20 ngày, tức là đã quá hạn 5 ngày. Phí phạt là 2%/tháng trên số tiền chưa hoàn ứng. \n\nTính phí phạt cho 20 ngày (tương đương khoảng 2/3 tháng):\nPhí phạt = 15.000.000 VNĐ * 2% * (20/30) = 15.000.000 VNĐ * 0.02 * 0.6667 = 200.000 VNĐ.\n\nNhân viên sẽ bị phạt 200.000 VNĐ.",
+      "avg_score": 0.7297,
+      "worst_metric": "faithfulness",
+      "score": 0.125,
+      "metrics": {
+        "faithfulness": 0.125,
+        "answer_relevancy": 0.7936,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "LLM hallucinating — câu trả lời không bám context",
+      "suggested_fix": "Siết prompt ('chỉ dùng context'), giảm temperature"
+    },
+    {
+      "question": "Thâm niên bao nhiêu năm thì được cộng thêm ngày phép?",
+      "answer": "Nhân viên có thâm niên từ **3 năm trở lên** được cộng thêm **1 ngày phép** cho mỗi 3 năm làm việc liên tục theo chính sách năm 2024.",
+      "avg_score": 0.8192,
+      "worst_metric": "context_precision",
+      "score": 0.5,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7769,
+        "context_precision": 0.5,
+        "context_recall": 1.0
+      },
+      "diagnosis": "Quá nhiều chunk nhiễu trong context",
+      "suggested_fix": "Thêm reranking hoặc lọc theo metadata"
+    },
+    {
+      "question": "Nhân viên được tài trợ khóa học 25 triệu, nghỉ việc sau 8 tháng hoàn thành khóa học. Phải hoàn trả bao nhiêu?",
+      "answer": "Nhân viên phải hoàn trả **100% chi phí** đào tạo đã được tài trợ, tức là **25 triệu VNĐ**.",
+      "avg_score": 0.8242,
+      "worst_metric": "faithfulness",
+      "score": 0.5,
+      "metrics": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.7969,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "LLM hallucinating — câu trả lời không bám context",
+      "suggested_fix": "Siết prompt ('chỉ dùng context'), giảm temperature"
+    },
+    {
+      "question": "Nếu cần mua một chiếc laptop 30 triệu cho nhân viên mới, ai phê duyệt và cần gì từ phòng CNTT?",
+      "answer": "Giám đốc phòng ban (Director) sẽ phê duyệt đơn hàng 30 triệu VNĐ. Ngoài ra, cần có xác nhận của phòng CNTT về cấu hình kỹ thuật trước khi đề xuất.",
+      "avg_score": 0.8312,
+      "worst_metric": "faithfulness",
+      "score": 0.5,
+      "metrics": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.8247,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "LLM hallucinating — câu trả lời không bám context",
+      "suggested_fix": "Siết prompt ('chỉ dùng context'), giảm temperature"
+    },
+    {
+      "question": "Có cần kích hoạt xác thực đa yếu tố (MFA) không?",
+      "answer": "Có, tất cả nhân viên bắt buộc phải kích hoạt MFA cho tài khoản email, VPN và các hệ thống nội bộ.",
+      "avg_score": 0.8342,
+      "worst_metric": "context_recall",
+      "score": 0.5,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8368,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      },
+      "diagnosis": "Thiếu chunk liên quan trong context",
+      "suggested_fix": "Cải thiện chunking hoặc tăng trọng số BM25 / top_k"
+    },
+    {
+      "question": "Nghỉ phép không lương 20 ngày cần ai phê duyệt?",
+      "answer": "Cần phê duyệt của Giám đốc điều hành (CEO).",
+      "avg_score": 0.9468,
+      "worst_metric": "answer_relevancy",
+      "score": 0.7872,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7872,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "Câu trả lời lạc đề so với câu hỏi",
+      "suggested_fix": "Cải thiện prompt template, thêm few-shot"
+    },
+    {
+      "question": "Muốn mua thiết bị trị giá 55 triệu cần ai phê duyệt?",
+      "answer": "Cần Tổng Giám đốc (CEO) phê duyệt.",
+      "avg_score": 0.9483,
+      "worst_metric": "answer_relevancy",
+      "score": 0.7933,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7933,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "Câu trả lời lạc đề so với câu hỏi",
+      "suggested_fix": "Cải thiện prompt template, thêm few-shot"
+    },
+    {
+      "question": "Khi phát hiện malware trên máy, nhân viên có nên tự xử lý không?",
+      "answer": "Nhân viên tuyệt đối **không tự ý xử lý malware** hoặc tìm cách khắc phục mà không có sự hướng dẫn của đội CNTT.",
+      "avg_score": 0.9537,
+      "worst_metric": "answer_relevancy",
+      "score": 0.8147,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8147,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "Câu trả lời lạc đề so với câu hỏi",
+      "suggested_fix": "Cải thiện prompt template, thêm few-shot"
+    },
+    {
+      "question": "Phụ cấp ăn trưa hàng tháng là bao nhiêu?",
+      "answer": "Phụ cấp ăn trưa hàng tháng là **1.000.000 VNĐ/tháng**.",
+      "avg_score": 0.9539,
+      "worst_metric": "answer_relevancy",
+      "score": 0.8156,
+      "metrics": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8156,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "diagnosis": "Câu trả lời lạc đề so với câu hỏi",
+      "suggested_fix": "Cải thiện prompt template, thêm few-shot"
+    }
+  ]
+}

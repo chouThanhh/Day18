@@ -25,11 +25,19 @@ def build_pipeline():
     print("\n[1/4] Chunking documents...", flush=True)
     docs = load_documents()
     all_chunks = []
-    for doc in docs:
+    parent_map: dict[str, str] = {}
+    for di, doc in enumerate(docs):
         parents, children = chunk_hierarchical(doc["text"], metadata=doc["metadata"])
+        for parent in parents:
+            # parent_id chỉ unique trong 1 doc ("parent_0"...) → thêm prefix doc
+            gpid = f"d{di}_{parent.metadata['parent_id']}"
+            parent_map[gpid] = parent.text
         for child in children:
-            all_chunks.append({"text": child.text, "metadata": {**child.metadata, "parent_id": child.parent_id}})
-    print(f"  ✓ {len(all_chunks)} chunks from {len(docs)} documents ({time.time()-t0:.1f}s)", flush=True)
+            gpid = f"d{di}_{child.parent_id}"
+            all_chunks.append({"text": child.text,
+                               "metadata": {**child.metadata, "parent_id": gpid}})
+    print(f"  ✓ {len(all_chunks)} child chunks / {len(parent_map)} parents "
+          f"from {len(docs)} documents ({time.time()-t0:.1f}s)", flush=True)
 
     # Step 2: Enrichment (M5)
     t0 = time.time()
@@ -54,15 +62,30 @@ def build_pipeline():
     reranker = CrossEncoderReranker()
     print(f"  ✓ Reranker ready ({time.time()-t0:.1f}s)", flush=True)
 
-    return search, reranker
+    return search, reranker, parent_map
 
 
-def run_query(query: str, search: HybridSearch, reranker: CrossEncoderReranker) -> tuple[str, list[str]]:
+def _expand_to_parents(items, parent_map: dict) -> list[str]:
+    """Small-to-big: đổi child chunk đã retrieve sang text của parent (đủ ngữ cảnh)."""
+    contexts, seen = [], set()
+    for it in items:
+        pid = (it.metadata or {}).get("parent_id")
+        text = parent_map.get(pid, it.text) if pid else it.text
+        if text not in seen:
+            seen.add(text)
+            contexts.append(text)
+    return contexts
+
+
+def run_query(query: str, search: HybridSearch, reranker: CrossEncoderReranker,
+              parent_map: dict | None = None) -> tuple[str, list[str]]:
     """Run single query through pipeline."""
+    parent_map = parent_map or {}
     results = search.search(query)
     docs = [{"text": r.text, "score": r.score, "metadata": r.metadata} for r in results]
     reranked = reranker.rerank(query, docs, top_k=RERANK_TOP_K)
-    contexts = [r.text for r in reranked] if reranked else [r.text for r in results[:3]]
+    top = reranked if reranked else results[:3]
+    contexts = _expand_to_parents(top, parent_map)
 
     from config import OPENAI_API_KEY
     if OPENAI_API_KEY and contexts:
@@ -83,14 +106,15 @@ def run_query(query: str, search: HybridSearch, reranker: CrossEncoderReranker) 
     return answer, contexts
 
 
-def evaluate_pipeline(search: HybridSearch, reranker: CrossEncoderReranker):
+def evaluate_pipeline(search: HybridSearch, reranker: CrossEncoderReranker,
+                      parent_map: dict | None = None):
     """Run evaluation on test set."""
     test_set = load_test_set()
     print(f"\n[Eval] Running {len(test_set)} queries...", flush=True)
     questions, answers, all_contexts, ground_truths = [], [], [], []
 
     for i, item in enumerate(test_set):
-        answer, contexts = run_query(item["question"], search, reranker)
+        answer, contexts = run_query(item["question"], search, reranker, parent_map)
         questions.append(item["question"])
         answers.append(answer)
         all_contexts.append(contexts)
@@ -116,6 +140,6 @@ def evaluate_pipeline(search: HybridSearch, reranker: CrossEncoderReranker):
 
 if __name__ == "__main__":
     start = time.time()
-    search, reranker = build_pipeline()
-    evaluate_pipeline(search, reranker)
+    search, reranker, parent_map = build_pipeline()
+    evaluate_pipeline(search, reranker, parent_map)
     print(f"\nTotal: {time.time() - start:.1f}s")
